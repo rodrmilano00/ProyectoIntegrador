@@ -10,4 +10,6 @@ add_executable(ProyectoIntegrador main.cpp
         Pelicula.cpp
         Pelicula.h
         Episodio.cpp
-        Episodio.h)
+        Episodio.h
+        Serie.cpp
+        Serie.h)
