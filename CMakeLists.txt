@@ -12,4 +12,6 @@ add_executable(ProyectoIntegrador main.cpp
         Episodio.cpp
         Episodio.h
         Serie.cpp
-        Serie.h)
+        Serie.h
+        Catalogo.cpp
+        Catalogo.h)
