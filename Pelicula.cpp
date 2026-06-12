@@ -19,6 +19,6 @@ void Pelicula::mostrarInfo() const {
 }
 
 bool Pelicula::operator==(const Pelicula &other) const {
-    return this-> nombre == other.nombre();
+    return this-> nombre == other.nombre;
 }
 

@@ -13,7 +13,7 @@ void Serie::agregarEpisodio(const Episodio &ep) {
     episodios.push_back(ep);
 }
 
-float Serie::getPromedio() {
+float Serie::getPromedio() const {
     if (episodios.empty()) return 0.0;
 
     float suma = 0.0;
