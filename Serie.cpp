@@ -32,5 +32,13 @@ void Serie::mostrarInfo() const {
               << " | Promedio: " << getPromedio() << "\n";
 }
 
-
+bool Serie::calificarEpisodio(const std::string& tituloEpisodio, float calificacion) {
+    for (auto& ep : episodios) {
+        if (ep.getTitulo() == tituloEpisodio) {
+            ep.calificar(calificacion);
+            return true;
+        }
+    }
+    return false;
+}
 
