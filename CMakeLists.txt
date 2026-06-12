@@ -4,4 +4,6 @@ project(ProyectoIntegrador)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(ProyectoIntegrador main.cpp
-        Exceptions.h)
+        Exceptions.h
+        Video.cpp
+        Video.h)
