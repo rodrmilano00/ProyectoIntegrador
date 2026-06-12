@@ -3,9 +3,7 @@
 //
 
 #include "Catalogo.h"
-
 #include <algorithm>
-
 #include "Pelicula.h"
 #include "Serie.h"
 #include "Exceptions.h"
@@ -13,85 +11,122 @@
 #include <sstream>
 #include <iostream>
 #include <ranges>
+
 using namespace std;
+
+string limpiarCadena(const string& str) {
+    string aux = str;
+    while (!aux.empty() && (aux.back() == '\r' || aux.back() == '\n' || aux.back() == ' ')) {
+        aux.pop_back();
+    }
+    while (!aux.empty() && aux.front() == ' ') {
+        aux.erase(0, 1);
+    }
+    return aux;
+}
 
 void Catalogo::cargarArchivo(const string &arch) {
     ifstream archivo(arch);
     if (!archivo.is_open()) {
-        throw ArchivoInvalidoError("No se pudo abrir el archivo especificado"); //exceptions usage
+        throw ArchivoInvalidoError("No se pudo abrir el archivo especificado");
     }
 
     videos.clear();
-
     string linea;
+    int numLinea = 0;
+
     while (getline(archivo, linea)) {
+        numLinea++;
         if (linea.empty()) continue;
+
         stringstream ss(linea);
         string tipo;
         getline(ss, tipo, ',');
+        tipo = limpiarCadena(tipo);
 
-        if (tipo == "P") { //pelicula
-            string id, nombre, durStr, genero, director;
-            getline(ss, id, ',');
-            getline(ss, nombre, ',' );
-            getline(ss, durStr, ',');
-            getline(ss, genero, ',');
-            getline(ss, director, ',');
+        try {
+            if (tipo == "P") { // Pelicula
+                string id, nombre, durStr, genero, director;
+                getline(ss, id, ',');
+                getline(ss, nombre, ',');
+                getline(ss, durStr, ',');
+                getline(ss, genero, ',');
+                getline(ss, director, ',');
 
-            if (id.empty() || nombre.empty() || durStr.empty() || genero.empty() || director.empty()) {
-                throw ArchivoInvalidoError("Formato incorrecto en el archivo"); //exceptions usage
-            }
+                id = limpiarCadena(id);
+                nombre = limpiarCadena(nombre);
+                durStr = limpiarCadena(durStr);
+                genero = limpiarCadena(genero);
+                director = limpiarCadena(director);
 
-            auto peli = make_unique<Pelicula>(id, nombre, stof(durStr), genero, director);
-            string califStr;
-            while (getline(ss, califStr, ',')) {
-                if (!califStr.empty()) peli->calificar(stof(califStr));
-            }
-            videos.push_back(std::move(peli));
+                if (id.empty() || nombre.empty() || durStr.empty() || genero.empty() || director.empty()) {
+                    throw ArchivoInvalidoError("Formato incorrecto en el archivo (Pelicula)");
+                }
 
-        } else if (tipo == "S") { // serie
-            string id, nombre, durStr, genero;
-            getline(ss, id, ',');
-            getline(ss, nombre, ',');
-            getline(ss, durStr, ',');
-            getline(ss, genero, ',');
+                auto peli = make_unique<Pelicula>(id, nombre, stof(durStr), genero, director);
+                string califStr;
+                while (getline(ss, califStr, ',')) {
+                    califStr = limpiarCadena(califStr);
+                    if (!califStr.empty()) peli->calificar(stof(califStr));
+                }
+                videos.push_back(std::move(peli));
 
-            if (id.empty() || nombre.empty() || durStr.empty() || genero.empty()) {
-                throw ArchivoInvalidoError("Formato incorrecto en el archivo"); //exceptions usage
-            }
-            videos.push_back(make_unique<Serie>(id, nombre, stof(durStr), genero));
+            } else if (tipo == "S") { // Serie
+                string id, nombre, durStr, genero;
+                getline(ss, id, ',');
+                getline(ss, nombre, ',');
+                getline(ss, durStr, ',');
+                getline(ss, genero, ',');
 
-        } else if (tipo == "E") { //episodio
-            string idSerie, tituloEp, tempStr;
-            getline(ss, idSerie, ',');
-            getline(ss, tempStr, ',');
-            getline(ss, tituloEp, ',');
+                id = limpiarCadena(id);
+                nombre = limpiarCadena(nombre);
+                durStr = limpiarCadena(durStr);
+                genero = limpiarCadena(genero);
 
-            if (idSerie.empty() || tempStr.empty() || tituloEp.empty()) {
-                throw ArchivoInvalidoError("Formato incorrecto en el archivo");
-            }
+                if (id.empty() || nombre.empty() || durStr.empty() || genero.empty()) {
+                    throw ArchivoInvalidoError("Formato incorrecto en el archivo (Serie)");
+                }
+                videos.push_back(make_unique<Serie>(id, nombre, stof(durStr), genero));
 
-            Episodio ep(tituloEp, stoi(tempStr));
-            string califStr;
-            while (getline(ss, califStr, ',')) {
-                if (!califStr.empty()) ep.calificar(stof(califStr));
-            }
+            } else if (tipo == "E") { // Episodio
+                string idSerie, tituloEp, tempStr;
+                getline(ss, idSerie, ',');
+                getline(ss, tempStr, ',');
+                getline(ss, tituloEp, ',');
 
-            //search for id
-            bool agregada = false;
-            for (auto& v:videos) {
-                if (v->getId() == idSerie) {
-                    auto* s = dynamic_cast<Serie*>(v.get());
-                    if (s) {
-                        s->agregarEpisodio(ep);
-                        agregada = true;
-                        break;
+                idSerie = limpiarCadena(idSerie);
+                tempStr = limpiarCadena(tempStr);
+                tituloEp = limpiarCadena(tituloEp);
+
+                if (idSerie.empty() || tempStr.empty() || tituloEp.empty()) {
+                    throw ArchivoInvalidoError("Formato incorrecto en el archivo (Episodio)");
+                }
+
+                Episodio ep(tituloEp, stoi(tempStr));
+                string califStr;
+                while (getline(ss, califStr, ',')) {
+                    califStr = limpiarCadena(califStr);
+                    if (!califStr.empty()) ep.calificar(stof(califStr));
+                }
+
+                bool agregada = false;
+                for (auto& v : videos) {
+                    if (v->getId() == idSerie) {
+                        auto* s = dynamic_cast<Serie*>(v.get());
+                        if (s) {
+                            s->agregarEpisodio(ep);
+                            agregada = true;
+                            break;
+                        }
                     }
                 }
+                if (!agregada) {
+                    throw VideoNoEncontradoError("No se pudo encontrar el ID de Serie para asignar el episodio");
+                }
             }
-            if (!agregada) {
-                throw VideoNoEncontradoError("No se pudo encontrar el ID para asignar el episodio");
-            }
+        }
+        catch (const invalid_argument& e) {
+            throw ArchivoInvalidoError("Error de conversion numerica (stoi/stof) en la linea " + to_string(numLinea) + ". Revise el archivo.");
         }
     }
     archivo.close();
@@ -101,13 +136,13 @@ void Catalogo::mostrarTodos(const string &genero, float calificacionMinima) cons
     if (!genero.empty()) {
         string gLower = genero;
         transform(gLower.begin(), gLower.end(), gLower.begin(), ::tolower);
-        if (gLower != "accion" && gLower != "accion" && gLower != "drama" && gLower != "misterio") {
-            throw GeneroInvalidoError("Genero no valido");
+        if (gLower != "accion" && gLower != "drama" && gLower != "misterio") {
+            throw GeneroInvalidoError("Genero no valido (Solo Accion, Drama, Misterio)");
         }
     }
 
     bool impreso = false;
-    for (const auto& v:videos) {
+    for (const auto& v : videos) {
         bool filtroGen = genero.empty() || v->getGenero() == genero;
         bool filtroCal = v->getPromedio() >= calificacionMinima;
 
@@ -116,32 +151,31 @@ void Catalogo::mostrarTodos(const string &genero, float calificacionMinima) cons
             impreso = true;
         }
     }
-    if (!impreso) cout << "Ningun video concide con el filtro.\n";
+    if (!impreso) cout << "Ningun video coincide con el filtro.\n";
 }
 
-
-void Catalogo::mostrarEpisodios(const std::string& nombreSerie, float calificacionMinima) const {
+void Catalogo::mostrarEpisodios(const string& nombreSerie, float calificacionMinima) const {
     bool encontrada = false;
     for (const auto& v : videos) {
         auto* s = dynamic_cast<Serie*>(v.get());
         if (s && s->getNombre() == nombreSerie) {
             encontrada = true;
-            std::cout << "\n--- Episodios de: " << nombreSerie << " (Mínimo " << calificacionMinima << ") ---\n";
+            cout << "\n--- Episodios de: " << nombreSerie << " (Minimo " << calificacionMinima << ") ---\n";
             bool algunEp = false;
             for (const auto& ep : s->getEpisodios()) {
                 if (ep.getPromedio() >= calificacionMinima) {
-                    std::cout << " * Temp " << ep.getTemporoda() << " | " << ep.getTitulo()
-                              << " |  Calificación: " << ep.getPromedio() << "\n";
+                    // Mantiene ep.getTemporoda() tal como esta implementado en tu clase Episodio
+                    cout << " * Temp " << ep.getTemporoda() << " | " << ep.getTitulo()
+                         << " | Calificacion: " << ep.getPromedio() << "\n";
                     algunEp = true;
                 }
             }
-            if (!algunEp) std::cout << "Ningún episodio cumple con la calificación mínima.\n";
+            if (!algunEp) cout << "Ningun episodio cumple con la calificacion minima.\n";
             return;
         }
     }
     if (!encontrada) throw VideoNoEncontradoError("La serie '" + nombreSerie + "' no se encuentra en el sistema.");
 }
-
 
 void Catalogo::mostrarPeliculas(float calificacionMinima) const {
     bool impresa = false;
@@ -152,29 +186,29 @@ void Catalogo::mostrarPeliculas(float calificacionMinima) const {
             impresa = true;
         }
     }
-    if (!impresa) std::cout << "No hay películas que cumplan con la calificación mínima.\n";
+    if (!impresa) cout << "No hay peliculas que cumplan con la calificacion minima.\n";
 }
 
 void Catalogo::calificarVideo(string& titulo, float calificacion) {
     if (calificacion < 1.0f || calificacion > 5.0f) {
-        throw CalificacionInvalidaError("La calificación otorgada debe estar en el rango de 1 a 5.");
+        throw CalificacionInvalidaError("La calificacion otorgada debe estar en el rango de 1 a 5.");
     }
     for (auto& v : videos) {
         if (v->getNombre() == titulo) {
             v->calificar(calificacion);
-            cout << "¡Éxito! Calificación registrada para " << titulo << ".\n";
+            cout << "Exito! Calificacion registrada para " << titulo << ".\n";
             return;
         }
 
         auto* s = dynamic_cast<Serie*>(v.get());
         if (s) {
             if (s->calificarEpisodio(titulo, calificacion)) {
-                cout << "¡Éxito! Calificación registrada para el episodio: " << titulo << ".\n";
+                cout << "Exito! Calificacion registrada para el episodio: " << titulo << ".\n";
                 return;
             }
         }
     }
-    throw VideoNoEncontradoError("No se localizó ninguna Película, Serie o Episodio llamado '" + titulo + "'.");
+    throw VideoNoEncontradoError("No se localizo ninguna Pelicula, Serie o Episodio llamado '" + titulo + "'.");
 }
 
 bool Catalogo::operator[](const string& titulo) const {

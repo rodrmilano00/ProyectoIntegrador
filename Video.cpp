@@ -32,7 +32,17 @@ bool Video::operator<(const Video &other) const {
     return this->getPromedio() < other.getPromedio();
 }
 
+string Video::getId() {
+    return id;
+}
 
+string Video::getNombre() {
+    return nombre;
+}
+
+string Video::getGenero() {
+    return genero;
+}
 
 
 
