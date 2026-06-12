@@ -155,33 +155,30 @@ void Catalogo::mostrarPeliculas(float calificacionMinima) const {
     if (!impresa) std::cout << "No hay películas que cumplan con la calificación mínima.\n";
 }
 
-void Catalogo::calificarVideo(const std::string& titulo, float calificacion) {
+void Catalogo::calificarVideo(string& titulo, float calificacion) {
     if (calificacion < 1.0f || calificacion > 5.0f) {
         throw CalificacionInvalidaError("La calificación otorgada debe estar en el rango de 1 a 5.");
     }
-
     for (auto& v : videos) {
         if (v->getNombre() == titulo) {
             v->calificar(calificacion);
-            std::cout << "¡Éxito! Calificación registrada para " << titulo << ".\n";
+            cout << "¡Éxito! Calificación registrada para " << titulo << ".\n";
             return;
         }
+
         auto* s = dynamic_cast<Serie*>(v.get());
         if (s) {
-            for (auto& ep : s->getEpisodios()) {
-                if (ep.getTitulo() == titulo) {
-                    ep.calificar(calificacion);
-                    std::cout << "¡Éxito! Calificación registrada para el episodio: " << titulo << ".\n";
-                    return;
-                }
+            if (s->calificarEpisodio(titulo, calificacion)) {
+                cout << "¡Éxito! Calificación registrada para el episodio: " << titulo << ".\n";
+                return;
             }
         }
     }
     throw VideoNoEncontradoError("No se localizó ninguna Película, Serie o Episodio llamado '" + titulo + "'.");
 }
 
-bool Catalogo::operator[](const std::string& titulo) const {
-    for (const auto& v : _videos) {
+bool Catalogo::operator[](const string& titulo) const {
+    for (const auto& v : videos) {
         if (v->getNombre() == titulo) return true;
         auto* s = dynamic_cast<Serie*>(v.get());
         if (s) {

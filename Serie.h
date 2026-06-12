@@ -22,6 +22,7 @@ public:
 
     void mostrarInfo() const override;
     float getPromedio() const override;
+    bool calificarEpisodio(const std::string& tituloEpisodio, float calificacion);
 };
 
 
