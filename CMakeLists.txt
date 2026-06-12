@@ -8,4 +8,6 @@ add_executable(ProyectoIntegrador main.cpp
         Video.cpp
         Video.h
         Pelicula.cpp
-        Pelicula.h)
+        Pelicula.h
+        Episodio.cpp
+        Episodio.h)
